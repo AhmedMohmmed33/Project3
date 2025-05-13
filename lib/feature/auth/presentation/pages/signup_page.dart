@@ -29,7 +29,7 @@ class _SignUpPageState extends State<SignUpPage> {
 
     try {
       final response = await http.post(
-        Uri.parse("http://192.168.1.7:5001/api/signup"), // 🛑 غيّر IP حسب جهازك
+        Uri.parse("http://192.168.1.13:5001/api/signup"), // 🛑 غيّر IP حسب جهازك
         headers: {"Content-Type": "application/json"},
         body: jsonEncode({
           "name": name,
