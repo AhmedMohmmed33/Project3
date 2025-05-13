@@ -1,13 +1,52 @@
-// lib/feature/auth/presentation/pages/login_page.dart
-
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 import 'signup_page.dart';
 
-class LoginPage extends StatelessWidget {
+class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
 
-  Widget spacer() {
-    return const SizedBox(height: 20);
+  @override
+  State<LoginPage> createState() => _LoginPageState();
+}
+
+class _LoginPageState extends State<LoginPage> {
+  final TextEditingController emailController = TextEditingController();
+  final TextEditingController passwordController = TextEditingController();
+
+  Future<void> login() async {
+    final email = emailController.text.trim();
+    final password = passwordController.text.trim();
+
+    if (email.isEmpty || password.isEmpty) {
+      showSnackbar("Please fill in all fields");
+      return;
+    }
+
+    try {
+      final response = await http.post(
+        Uri.parse('http://192.168.1.7:5001/api/login'), // ✏️ غيّر الـ IP لو لازم
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'email': email, 'password': password}),
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        showSnackbar("Login Success ✅\nToken: ${data['token']}");
+        // Navigate to another page or store the token
+      } else {
+        final data = jsonDecode(response.body);
+        showSnackbar("Login failed ❌\n${data['message']}");
+      }
+    } catch (e) {
+      showSnackbar("Error: $e");
+    }
+  }
+
+  void showSnackbar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message), duration: const Duration(seconds: 3)),
+    );
   }
 
   @override
@@ -19,42 +58,46 @@ class LoginPage extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            spacer(),
+            const SizedBox(height: 20),
             Text('Hello, Welcome Back!', style: Theme.of(context).textTheme.headlineLarge),
             const SizedBox(height: 12),
             Text('Sign in to continue.', style: Theme.of(context).textTheme.titleMedium),
             const SizedBox(height: 40),
-            TextField(obscureText: true, decoration: InputDecoration(labelText: 'Name')),
+            TextField(
+              controller: emailController,
+              decoration: const InputDecoration(labelText: 'Email'),
+            ),
             const SizedBox(height: 10),
-            TextField(obscureText: true, decoration: InputDecoration(labelText: 'Password')),
-            const SizedBox(height: 5.0),
-            TextButton(onPressed: () {}, child: const Text('Forgot Password?', style: TextStyle(color: Colors.black))),
+            TextField(
+              controller: passwordController,
+              obscureText: true,
+              decoration: const InputDecoration(labelText: 'Password'),
+            ),
+            const SizedBox(height: 5),
+            TextButton(
+              onPressed: () {},
+              child: const Text('Forgot Password?', style: TextStyle(color: Colors.black)),
+            ),
             const SizedBox(height: 40),
             ElevatedButton(
-              onPressed: () {},
+              onPressed: login,
               style: ElevatedButton.styleFrom(minimumSize: const Size.fromHeight(50)),
-              child: const Text('Log in', style: TextStyle(color: Colors.white, fontSize: 16),),
+              child: const Text('Log in', style: TextStyle(color: Colors.white, fontSize: 16)),
             ),
             const SizedBox(height: 24),
-            Center(
-              child: Column(
-                children: [
-                  Row(
-                    children: [
-                      Text("Don't have an account?", style: Theme.of(context).textTheme.titleMedium),
-                      TextButton(
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (context) => const SignUpPage()),
-                          );
-                        },
-                        child: const Text('Signup !', style: TextStyle(color: Colors.black)),
-                      ),  
-                    ],
-                  ),
-                ], 
-              ),    
+            Row(
+              children: [
+                Text("Don't have an account?", style: Theme.of(context).textTheme.titleMedium),
+                TextButton(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => const SignUpPage()),
+                    );
+                  },
+                  child: const Text('Signup !', style: TextStyle(color: Colors.black)),
+                ),
+              ],
             ),
           ],
         ),
